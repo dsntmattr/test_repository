@@ -23,8 +23,16 @@ toi   <- list("2000-05-01/2000-09-30", "2001-05-01/2001-09-30")
 # set the bands you want to get
 bands <-  c("Nadir_Reflectance_Band1","Nadir_Reflectance_Band2", "Nadir_Reflectance_Band3")
 
-
-get.the.data = function(area, time, bands) {
+# set the function to dowload the data
+# area: Area of interest (numeric vector?, Xmin, Ymin, Xmax, Ymax)
+# toi: list of character vectors of datetimes (format: "YYYY-MM-DD/YYYY-MM-DD)
+# bands: bands to download from the product as character vector
+# out.path: path to save the data as character vector
+# own.prefix: prefix for the saved files as character vector
+# aggr.time: dt argument of cube.view ("P1M or sth)
+# aggr.method: methd argument of cube.view ("mean" or sth
+)
+get.the.data = function(area, time, bands, out.path, own.prefix, aggr.time, aggr.method) {
   #filter collection to find the elements we want containing the coordinates of interest
   it.obj <- s.obj %>%
     stac_search(collections = "modis-43A4-061",
@@ -60,13 +68,13 @@ get.the.data = function(area, time, bands) {
   #datacube for images at acquisition time  
   v     = cube_view(srs = wkt2,  extent = list(t0 = substr(toi, 1, 10), t1 = substr(toi, 12, 22),
                                                left = aoi.extent$xmin, right = aoi.extent$xmax,  top = aoi.extent$ymax, bottom = aoi.extent$ymin),
-                    dx = 500, dy = 500, dt="P1M", aggregation = "mean", resampling = "bilinear")
+                    dx = 500, dy = 500, dt=aggr.time, aggregation = aggr.method, resampling = "bilinear")
   cube = raster_cube(collection, v)
   
   # Saving
   write_tif((cube),
-            dir="work/P1M",
-            prefix='MODIS_')
+            dir=out.path,
+            prefix=own.prefix)
 }
 
 get.the.data(aoi, toi[1], bands)
